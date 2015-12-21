@@ -289,6 +289,18 @@ module PaperTrail
     end
     alias_method :version_author, :terminator
 
+    # Returns mongoid User object or nil
+    def whodunnit_mongoid
+      if terminator && terminator.kind_of?(String)
+        bson_id = YAML::load(terminator) # "--- !ruby/object:Moped::BSON::ObjectId\nraw_data: !binary |-\n  U3MDAQ1gxrQeAAAY\n" #=> => "537303010d60c6b41e000018"
+        begin
+          User.find(bson_id)
+        rescue Mongoid::Errors::DocumentNotFound => e
+          nil
+        end
+      end
+    end
+
     def sibling_versions(reload = false)
       @sibling_versions = nil if reload == true
       @sibling_versions ||= self.class.with_item_keys(item_type, item_id)
